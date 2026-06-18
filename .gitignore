@@ -5,7 +5,17 @@ build/
 .env.local
 .DS_Store
 *.log
-.vscode/
 .idea/
 out/
 release/
+
+# VS Code - ignore user-specific files, but commit project settings
+.vscode/settings.local.json
+.vscode/launch.local.json
+.vscode/*.local.json
+# Allow committing these shared settings:
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/keybindings.json
