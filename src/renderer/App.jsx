@@ -1,7 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("timer");
+
+  // --- 計時器狀態功能 ---
+  const [timeLeft, setTimeLeft] = useState(25 * 60); // 預設 25 分鐘
+  const [isRunning, setIsRunning] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            setIsRunning(false);
+            alert("⏰ 番茄鐘結束！休息一下吧！");
+            return 25 * 60;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isRunning]);
+
+  const toggleTimer = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTimeLeft(25 * 60);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // --- AI 助理狀態功能 ---
+  const [difficulty, setDifficulty] = useState("");
+  const [aiResponse, setAiResponse] = useState(null);
+
+  const handleAiSubmit = (e) => {
+    e.preventDefault();
+    if (!difficulty.trim()) return;
+
+    // 模擬 AI 根據關鍵字給予具體建議與準備方向
+    let advice = "保持專注，將大目標拆解成小步驟。";
+    let direction = "建議每天固定安排 1-2 個番茄鐘專注攻克此項難題。";
+
+    if (difficulty.includes("數學") || difficulty.includes("計算")) {
+      advice = "理解公式背後的邏輯比死記更重要，試著從基礎例題著手。";
+      direction = "1. 每天練習 3 題基礎題 ➔ 2. 錯題歸納並重新計算 ➔ 3. 挑戰進階題型。";
+    } else if (difficulty.includes("英文") || difficulty.includes("語言") || difficulty.includes("單字")) {
+      advice = "語言需要碎片化記憶，不建議長時間死背。";
+      direction = "1. 利用早晨番茄鐘記 10 個單字 ➔ 2. 下午利用計時器閱讀一篇短文 ➔ 3. 睡前自我測試。";
+    } else if (difficulty.includes("專注") || difficulty.includes("分心")) {
+      advice = "大腦的專注力就像肌肉，需要漸進式訓練。";
+      direction = "1. 開啟計時器前將手機放至另一個房間 ➔ 2. 實施嚴格的 25 分鐘專注、5 分鐘全休息 ➔ 3. 每天檢視分心原因。";
+    } else if (difficulty.includes("進度") || difficulty.includes("讀不完")) {
+      advice = "時間管理的本質是放棄不重要的事，抓大放小。";
+      direction = "1. 列出今日必做前三件事 ➔ 2. 優先用精力最好的時段解決最難的科目 ➔ 3. 每週調整排程。";
+    }
+
+    setAiResponse({ advice, direction });
+  };
 
   const tabs = [
     { id: "timer", label: "計時器", icon: "⏱️" },
@@ -15,16 +83,26 @@ export default function App() {
       case "timer":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">
-              ⏱️ 計時器
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">⏱️ 計時器</h2>
             <div className="text-center">
-              <div className="text-6xl font-bold text-blue-600 mb-8">25:00</div>
+              <div className="text-6xl font-bold text-blue-600 mb-8">
+                {formatTime(timeLeft)}
+              </div>
               <div className="flex gap-4 justify-center">
-                <button type="button" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                  開始計時
+                <button
+                  type="button"
+                  onClick={toggleTimer}
+                  className={`px-8 py-3 rounded-lg font-semibold text-white transition ${
+                    isRunning ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                >
+                  {isRunning ? "暫停計時" : "開始計時"}
                 </button>
-                <button type="button" className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition">
+                <button
+                  type="button"
+                  onClick={resetTimer}
+                  className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition"
+                >
                   重置
                 </button>
               </div>
@@ -34,9 +112,7 @@ export default function App() {
       case "tasks":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">
-              📋 任務清單
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">📋 任務清單</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
                 <input type="checkbox" className="w-5 h-5" />
@@ -57,9 +133,7 @@ export default function App() {
       case "stats":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">
-              📊 統計數據
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">📊 統計數據</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 p-6 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">12</div>
@@ -83,29 +157,48 @@ export default function App() {
       case "ai":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">
-              🤖 AI 學習建議
-            </h2>
-            <div className="space-y-4">
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <p className="font-semibold text-blue-900">學習建議</p>
-                <p className="text-sm text-blue-800 mt-1">
-                  根據你的學習數據，建議每個番茄鐘後休息 5 分鐘。
-                </p>
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">🤖 AI 學習建議助教</h2>
+            
+            {/* 困難輸入表單 */}
+            <form onSubmit={handleAiSubmit} className="mb-8">
+              <label htmlFor="difficulty-input" className="block text-sm font-medium text-slate-700 mb-2">
+                請寫下你目前遇到的學習困難：
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="difficulty-input"
+                  type="text"
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  placeholder="例如：數學公式記不住、背英文單字容易分心、讀書時間不夠..."
+                  className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition shrink-0"
+                >
+                  獲取 AI 建議
+                </button>
               </div>
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p className="font-semibold text-green-900">進度追蹤</p>
-                <p className="text-sm text-green-800 mt-1">
-                  你的學習連續性很好，請再加油！
-                </p>
+            </form>
+
+            {/* AI 回應區域 */}
+            {aiResponse ? (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <p className="font-semibold text-blue-900">💡 AI 改善建議</p>
+                  <p className="text-sm text-blue-800 mt-1">{aiResponse.advice}</p>
+                </div>
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                  <p className="font-semibold text-green-900">🚀 具體準備方向步驟</p>
+                  <p className="text-sm text-green-800 mt-1 whitespace-pre-line">{aiResponse.direction}</p>
+                </div>
               </div>
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                <p className="font-semibold text-yellow-900">優化建議</p>
-                <p className="text-sm text-yellow-800 mt-1">
-                  嘗試在下午 2-4 點進行複習，效果會更佳。
-                </p>
+            ) : (
+              <div className="space-y-4 text-slate-400 text-sm text-center py-6 border-2 border-dashed border-slate-200 rounded-lg">
+                在上方輸入您的困擾，AI 助理將為您量身打造學習方向。
               </div>
-            </div>
+            )}
           </div>
         );
       default:
@@ -120,12 +213,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-blue-600">
-                📚 AI Reading Timer
-              </h1>
-              <p className="text-sm text-slate-600 mt-1">
-                搭載 AI 的讀書計時助手，幫你提升學習效率
-              </p>
+              <h1 className="text-3xl font-bold text-blue-600">📚 AI Reading Timer</h1>
+              <p className="text-sm text-slate-600 mt-1">搭載 AI 的讀書計時助手，幫你提升學習效率</p>
             </div>
             <div className="text-right text-sm text-slate-600">
               <p>讓我們一起專注學習吧！💪</p>
@@ -162,48 +251,3 @@ export default function App() {
       {/* Footer */}
       <footer className="mt-16 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">📚 關於</h3>
-              <p className="text-slate-400 text-sm">
-                AI Reading Timer 是一款功能強大的讀書計時工具，融合番茄鐘技巧和
-                AI 技術。
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">✨ 功能</h3>
-              <ul className="text-slate-400 text-sm space-y-2">
-                <li>⏱️ 番茄鐘計時</li>
-                <li>📋 任務管理</li>
-                <li>📊 數據統計</li>
-                <li>🤖 AI 建議</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">💡 學習貼士</h3>
-              <ul className="text-slate-400 text-sm space-y-2">
-                <li>🎯 設定明確目標</li>
-                <li>🔇 消除干擾</li>
-                <li>☕ 定期休息</li>
-                <li>📈 追蹤進度</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-slate-800 pt-8">
-            <p className="text-center text-slate-400 text-sm">
-              © 2024 AI Reading Timer. Made with ❤️ for learners.
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-      `}</style>
-    </div>
-  );
-}
