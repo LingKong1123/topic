@@ -1,73 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("timer");
-
-  // --- ⏱️ 計時器核心狀態與邏輯區 ---
-  const [workLength, setWorkLength] = useState(25 * 60); // 預設工作 25 分鐘 (以秒計算)
-  const [breakLength, setBreakLength] = useState(5 * 60); // 預設休息 5 分鐘 (以秒計算)
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isWorking, setIsWorking] = useState(true); // true = 專注時間, false = 休息時間
-  const [isRunning, setIsRunning] = useState(false);
-  
-  // 使用 useRef 儲存定時器，確保在各種狀態切換下都能準確清除與控制
-  const timerRef = useRef(null);
-
-  // 當使用者在「非執行狀態」調整工作或休息時間時，同步更新畫面顯示的時間
-  useEffect(() => {
-    if (!isRunning) {
-      setTimeLeft(isWorking ? workLength : breakLength);
-    }
-  }, [workLength, breakLength, isWorking, isRunning]);
-
-  // 核心倒數計時邏輯
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            // 時間到了，清除目前的計時
-            clearInterval(timerRef.current);
-            setIsRunning(false);
-            
-            // 自動切換下一個模式
-            const nextMode = !isWorking;
-            setIsWorking(nextMode);
-            
-            // 延遲一下跳出提醒，避免阻塞渲染
-            setTimeout(() => {
-              alert(nextMode ? "💪 休息結束！準備開始專注！" : "🔊 專注時間結束！休息一下吧！");
-            }, 100);
-            
-            return nextMode ? workLength : breakLength;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    // 元件卸載時清除計時器，防範記憶體流失
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning, isWorking, workLength, breakLength]);
-
-  // 格式化時間（將總秒數轉換為 mm:ss 格式顯示）
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // 重置按鈕邏輯
-  const handleReset = () => {
-    setIsRunning(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-    setIsWorking(true);
-    setTimeLeft(workLength);
-  };
 
   const tabs = [
     { id: "timer", label: "計時器", icon: "⏱️" },
@@ -81,74 +15,19 @@ export default function App() {
       case "timer":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-2 text-slate-800">
-              ⏱️ 計時器 — <span className="text-xl font-semibold text-blue-500">{isWorking ? "專注中" : "休息中"}</span>
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">
+              ⏱️ 計時器
             </h2>
             <div className="text-center">
-              {/* 動態顯示倒數時間 */}
-              <div className="text-6xl font-bold text-blue-600 mb-8 font-mono tracking-wider">
-                {formatTime(timeLeft)}
-              </div>
-              
-              {/* 控制按鈕 */}
-              <div className="flex gap-4 justify-center mb-8">
-                <button 
-                  onClick={() => setIsRunning(!isRunning)}
-                  className={`${isRunning ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700"} text-white px-8 py-3 rounded-lg font-semibold transition`}
-                >
-                  {isRunning ? "暫停計時" : "開始計時"}
+              <div className="text-6xl font-bold text-blue-600 mb-8">25:00</div>
+              <div className="flex gap-4 justify-center">
+                <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                  開始計時
                 </button>
-                <button 
-                  onClick={handleReset}
-                  className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition"
-                >
+                <button className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition">
                   重置
                 </button>
               </div>
-
-              <hr className="border-slate-100 my-6" />
-
-              {/* 🛠️ 時間增減調整與自訂功能面板 */}
-              <div className="max-w-xs mx-auto space-y-4 text-left">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">📝 專注時間 :</span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setWorkLength(prev => Math.max(60, prev - 60))}
-                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
-                    >
-                      -
-                    </button>
-                    <span className="w-16 text-center font-semibold text-slate-800">{Math.floor(workLength / 60)} 分</span>
-                    <button 
-                      onClick={() => setWorkLength(prev => prev + 60)}
-                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">☕ 休息時間 :</span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setBreakLength(prev => Math.max(60, prev - 60))}
-                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
-                    >
-                      -
-                    </button>
-                    <span className="w-16 text-center font-semibold text-slate-800">{Math.floor(breakLength / 60)} 分</span>
-                    <button 
-                      onClick={() => setBreakLength(prev => prev + 60)}
-                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
         );
@@ -247,4 +126,84 @@ export default function App() {
               <p className="text-sm text-slate-600 mt-1">
                 搭載 AI 的讀書計時助手，幫你提升學習效率
               </p>
+            </div>
+            <div className="text-right text-sm text-slate-600">
+              <p>讓我們一起專注學習吧！💪</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab navigation */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
+                activeTab === tab.id
+                  ? "bg-blue-600 text-white shadow-lg scale-105"
+                  : "bg-white text-slate-700 hover:bg-slate-50 shadow-sm border border-slate-200"
+              }`}
+            >
+              <span className="text-2xl mb-1">{tab.icon}</span>
+              <span className="text-xs sm:text-sm">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content area */}
+        <div className="animate-fadeIn">{renderContent()}</div>
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-16 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">📚 關於</h3>
+              <p className="text-slate-400 text-sm">
+                AI Reading Timer 是一款功能強大的讀書計時工具，融合番茄鐘技巧和
+                AI 技術。
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">✨ 功能</h3>
+              <ul className="text-slate-400 text-sm space-y-2">
+                <li>⏱️ 番茄鐘計時</li>
+                <li>📋 任務管理</li>
+                <li>📊 數據統計</li>
+                <li>🤖 AI 建議</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">💡 學習貼士</h3>
+              <ul className="text-slate-400 text-sm space-y-2">
+                <li>🎯 設定明確目標</li>
+                <li>🔇 消除干擾</li>
+                <li>☕ 定期休息</li>
+                <li>📈 追蹤進度</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-slate-800 pt-8">
+            <p className="text-center text-slate-400 text-sm">
+              © 2024 AI Reading Timer. Made with ❤️ for learners.
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+      `}</style>
+    </div>
+  );
+}
             </div>
