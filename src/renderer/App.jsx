@@ -1,40 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("timer");
 
-  // --- 計時器狀態功能 ---
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 預設 25 分鐘
+  // === 計時器狀態與邏輯 ===
+  const [timeLeft, setTimeLeft] = useState(1500); // 25分鐘 = 1500秒
   const [isRunning, setIsRunning] = useState(false);
-  const timerRef = useRef(null);
 
   useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            setIsRunning(false);
-            alert("⏰ 番茄鐘結束！休息一下吧！");
-            return 25 * 60;
-          }
-          return prev - 1;
-        });
+    let timer = null;
+    if (isRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else {
-      clearInterval(timerRef.current);
+    } else if (timeLeft === 0) {
+      setIsRunning(false);
+      alert("時間到！休息一下吧。");
     }
-    return () => clearInterval(timerRef.current);
-  }, [isRunning]);
-
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTimeLeft(25 * 60);
-  };
+    return () => clearInterval(timer);
+  }, [isRunning, timeLeft]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -42,33 +26,65 @@ export default function App() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // --- AI 助理狀態功能 ---
-  const [difficulty, setDifficulty] = useState("");
-  const [aiResponse, setAiResponse] = useState(null);
+  const handleStartPause = () => {
+    setIsRunning(!isRunning);
+  };
 
-  const handleAiSubmit = (e) => {
+  const handleReset = () => {
+    setIsRunning(false);
+    setTimeLeft(1500);
+  };
+
+  // === AI 困難分析狀態與邏輯 ===
+  const [difficultyInput, setDifficultyInput] = useState("");
+  const [aiSuggestions, setAiSuggestions] = useState([
+    {
+      title: "學習建議",
+      content: "根據你的學習數據，建議每個番茄鐘後休息 5 分鐘。",
+      type: "blue"
+    },
+    {
+      title: "進度追蹤",
+      content: "你的學習連續性很好，請再加油！",
+      type: "green"
+    },
+    {
+      title: "優化建議",
+      content: "嘗試在下午 2-4 點進行複習，效果會更佳。",
+      type: "yellow"
+    }
+  ]);
+
+  const handleAiAnalyze = (e) => {
     e.preventDefault();
-    if (!difficulty.trim()) return;
+    if (!difficultyInput.trim()) return;
 
-    // 模擬 AI 根據關鍵字給予具體建議與準備方向
-    let advice = "保持專注，將大目標拆解成小步驟。";
-    let direction = "建議每天固定安排 1-2 個番茄鐘專注攻克此項難題。";
+    // 模擬 AI 根據關鍵字分析並給予準備方向
+    const input = difficultyInput.toLowerCase();
+    let newSuggestions = [];
 
-    if (difficulty.includes("數學") || difficulty.includes("計算")) {
-      advice = "理解公式背後的邏輯比死記更重要，試著從基礎例題著手。";
-      direction = "1. 每天練習 3 題基礎題 ➔ 2. 錯題歸納並重新計算 ➔ 3. 挑戰進階題型。";
-    } else if (difficulty.includes("英文") || difficulty.includes("語言") || difficulty.includes("單字")) {
-      advice = "語言需要碎片化記憶，不建議長時間死背。";
-      direction = "1. 利用早晨番茄鐘記 10 個單字 ➔ 2. 下午利用計時器閱讀一篇短文 ➔ 3. 睡前自我測試。";
-    } else if (difficulty.includes("專注") || difficulty.includes("分心")) {
-      advice = "大腦的專注力就像肌肉，需要漸進式訓練。";
-      direction = "1. 開啟計時器前將手機放至另一個房間 ➔ 2. 實施嚴格的 25 分鐘專注、5 分鐘全休息 ➔ 3. 每天檢視分心原因。";
-    } else if (difficulty.includes("進度") || difficulty.includes("讀不完")) {
-      advice = "時間管理的本質是放棄不重要的事，抓大放小。";
-      direction = "1. 列出今日必做前三件事 ➔ 2. 優先用精力最好的時段解決最難的科目 ➔ 3. 每週調整排程。";
+    if (input.includes("數學") || input.includes("算") || input.includes("公式")) {
+      newSuggestions = [
+        { title: "🎯 核心突破口", content: `針對「${difficultyInput}」，建議不要死記公式，先從課本基本例題的推導過程著手。`, type: "blue" },
+        { title: "📋 刷題準備方向", content: "每天定時練習 5 道觀念題，建立錯題本，將算錯的步驟用紅筆標記，隔天重新遮住再算一次。", type: "green" },
+        { title: "💡 AI 心理建設", content: "理解概念比做大量題目更重要，進度慢一點沒關係，穩紮穩打才是最快的捷徑！", type: "yellow" }
+      ];
+    } else if (input.includes("英文") || input.includes("單字") || input.includes("背")) {
+      newSuggestions = [
+        { title: "🎯 核心突破口", content: `針對「${difficultyInput}」，建議放棄長時間死背。改用動態記憶法，把單字融入句子中閱讀。`, type: "blue" },
+        { title: "📋 複習準備方向", content: "利用今天番茄鐘的零碎時間複習。早中晚各看 3 次，比一口氣背一小時更有效率。", type: "green" },
+        { title: "💡 AI 心理建設", content: "語言需要刺激與反覆接觸，忘記是很正常的，多看幾次大腦就會自動記住！", type: "yellow" }
+      ];
+    } else {
+      newSuggestions = [
+        { title: "🎯 核心突破口", content: `針對你的困境「${difficultyInput}」，AI 建議將這個大問題切碎。先拆解成 15 分鐘內能完成的小任務。`, type: "blue" },
+        { title: "📋 行動準備方向", content: "在下一個番茄鐘開始前，拿出一張紙寫下今天最重要的一件事，並立刻動手做前 5 分鐘。", type: "green" },
+        { title: "💡 AI 心理建設", content: "萬事起頭難，只要開始專注第一個 5 分鐘，焦慮感就會自然消失！", type: "yellow" }
+      ];
     }
 
-    setAiResponse({ advice, direction });
+    setAiSuggestions(newSuggestions);
+    setDifficultyInput("");
   };
 
   const tabs = [
@@ -85,13 +101,13 @@ export default function App() {
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-3xl font-bold mb-6 text-slate-800">⏱️ 計時器</h2>
             <div className="text-center">
-              <div className="text-6xl font-bold text-blue-600 mb-8">
+              <div className="text-6xl font-bold text-blue-600 mb-8 font-mono">
                 {formatTime(timeLeft)}
               </div>
               <div className="flex gap-4 justify-center">
                 <button
                   type="button"
-                  onClick={toggleTimer}
+                  onClick={handleStartPause}
                   className={`px-8 py-3 rounded-lg font-semibold text-white transition ${
                     isRunning ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"
                   }`}
@@ -100,7 +116,7 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  onClick={resetTimer}
+                  onClick={handleReset}
                   className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition"
                 >
                   重置
@@ -157,48 +173,46 @@ export default function App() {
       case "ai":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">🤖 AI 學習建議助教</h2>
+            <h2 className="text-3xl font-bold mb-4 text-slate-800">🤖 AI 學習諮詢與建議</h2>
             
             {/* 困難輸入表單 */}
-            <form onSubmit={handleAiSubmit} className="mb-8">
-              <label htmlFor="difficulty-input" className="block text-sm font-medium text-slate-700 mb-2">
-                請寫下你目前遇到的學習困難：
+            <form onSubmit={handleAiAnalyze} className="mb-8">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                遇到了什麼學習困難？寫出來讓 AI 幫你規劃準備方向：
               </label>
               <div className="flex gap-2">
                 <input
-                  id="difficulty-input"
                   type="text"
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value)}
-                  placeholder="例如：數學公式記不住、背英文單字容易分心、讀書時間不夠..."
-                  className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={difficultyInput}
+                  onChange={(e) => setDifficultyInput(e.target.value)}
+                  placeholder="例如：數學公式背不起來、英文單字一直忘、無法靜下心..."
+                  className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition shrink-0"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition text-sm whitespace-nowrap"
                 >
-                  獲取 AI 建議
+                  尋求建議
                 </button>
               </div>
             </form>
 
-            {/* AI 回應區域 */}
-            {aiResponse ? (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                  <p className="font-semibold text-blue-900">💡 AI 改善建議</p>
-                  <p className="text-sm text-blue-800 mt-1">{aiResponse.advice}</p>
-                </div>
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                  <p className="font-semibold text-green-900">🚀 具體準備方向步驟</p>
-                  <p className="text-sm text-green-800 mt-1 whitespace-pre-line">{aiResponse.direction}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 text-slate-400 text-sm text-center py-6 border-2 border-dashed border-slate-200 rounded-lg">
-                在上方輸入您的困擾，AI 助理將為您量身打造學習方向。
-              </div>
-            )}
+            {/* AI 建議輸出結果 */}
+            <div className="space-y-4">
+              {aiSuggestions.map((item, index) => {
+                let colorClass = "bg-blue-50 border-blue-500 text-blue-900 text-blue-800";
+                if (item.type === "green") colorClass = "bg-green-50 border-green-500 text-green-900 text-green-800";
+                if (item.type === "yellow") colorClass = "bg-yellow-50 border-yellow-500 text-yellow-900 text-yellow-800";
+                
+                const classes = colorClass.split(" ");
+                return (
+                  <div key={index} className={`${classes[0]} border-l-4 ${classes[1]} p-4 rounded`}>
+                    <p className={`font-semibold ${classes[2]}`}>{item.title}</p>
+                    <p className={`text-sm ${classes[3]} mt-1`}>{item.content}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         );
       default:
@@ -236,18 +250,3 @@ export default function App() {
                 activeTab === tab.id
                   ? "bg-blue-600 text-white shadow-lg scale-105"
                   : "bg-white text-slate-700 hover:bg-slate-50 shadow-sm border border-slate-200"
-              }`}
-            >
-              <span className="text-2xl mb-1">{tab.icon}</span>
-              <span className="text-xs sm:text-sm">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Content area */}
-        <div className="animate-fadeIn">{renderContent()}</div>
-      </main>
-
-      {/* Footer */}
-      <footer className="mt-16 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
