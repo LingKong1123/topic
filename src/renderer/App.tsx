@@ -3,8 +3,9 @@ import TimerPanel from './components/TimerPanel'
 import TaskPanel from './components/TaskPanel'
 import StatisticsPanel from './components/StatisticsPanel'
 import AIAssistantPanel from './components/AIAssistantPanel'
+import { GoogleSheetsPanel } from './components/GoogleSheetsPanel'
 
-type TabType = 'timer' | 'tasks' | 'stats' | 'ai'
+type TabType = 'timer' | 'tasks' | 'stats' | 'ai' | 'sheets'
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('timer')
@@ -14,6 +15,7 @@ const App: React.FC = () => {
     { id: 'tasks', label: '任務', icon: '📋', component: TaskPanel },
     { id: 'stats', label: '統計', icon: '📊', component: StatisticsPanel },
     { id: 'ai', label: 'AI 助理', icon: '🤖', component: AIAssistantPanel },
+    { id: 'sheets', label: '雲端存儲', icon: '☁️', component: GoogleSheetsPanel },
   ]
 
   const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component || TimerPanel
@@ -42,7 +44,7 @@ const App: React.FC = () => {
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
