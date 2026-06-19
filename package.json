@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AI-powered reading timer with Pomodoro technique, task management, and learning analytics",
   "main": "electron/main.js",
-  "homepage": "./",
+  "homepage": "https://LingKong1123.github.io/topic/",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
@@ -26,18 +26,28 @@
     "postcss": "^8.4.0",
     "autoprefixer": "^10.4.0",
     "concurrently": "^8.0.0",
-    "wait-on": "^7.0.0"
+    "wait-on": "^7.0.0",
+    "gh-pages": "^5.0.0"
   },
   "scripts": {
     "dev": "concurrently \"npm run vite\" \"npm run electron\"",
-    "vite": "vite",
+    "vite": "vite --host",
     "electron": "wait-on http://localhost:5173 && electron .",
     "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "npx gh-pages -d dist",
     "electron-dev": "electron . --no-sandbox",
     "dist": "npm run build && electron-builder",
     "type-check": "tsc --noEmit"
   },
-  "keywords": ["pomodoro", "timer", "reading", "ai", "productivity", "learning"],
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "reading",
+    "ai",
+    "productivity",
+    "learning"
+  ],
   "author": "Your Name",
   "license": "MIT"
 }
