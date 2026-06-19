@@ -35,7 +35,7 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "liveServer.settings.port": 5513,
+  "liveServer.settings.port": 5514,
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "remote.autoForwardPortsFallback": 0
