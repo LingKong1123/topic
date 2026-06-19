@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("timer");
@@ -21,10 +21,10 @@ export default function App() {
             <div className="text-center">
               <div className="text-6xl font-bold text-blue-600 mb-8">25:00</div>
               <div className="flex gap-4 justify-center">
-                <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                <button type="button" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
                   開始計時
                 </button>
-                <button className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition">
+                <button type="button" className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition">
                   重置
                 </button>
               </div>
@@ -141,6 +141,7 @@ export default function App() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`flex flex-col items-center justify-center py-4 px-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
                 activeTab === tab.id
@@ -206,4 +207,3 @@ export default function App() {
     </div>
   );
 }
-            </div>
