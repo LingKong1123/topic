@@ -1,7 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("timer");
+
+  // --- ⏱️ 計時器核心狀態與邏輯區開始 ---
+  const [workLength, setWorkLength] = useState(25 * 60); // 預設工作 25 分鐘
+  const [breakLength, setBreakLength] = useState(5 * 60); // 預設休息 5 分鐘
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isWorking, setIsWorking] = useState(true); // true = 工作, false = 休息
+  const [isRunning, setIsRunning] = useState(false);
+
+  // 當調整時間設定且計時器未啟動時，同步更新倒數顯示
+  useEffect(() => {
+    if (!isRunning) {
+      setTimeLeft(isWorking ? workLength : breakLength);
+    }
+  }, [workLength, breakLength, isWorking, isRunning]);
+
+  // 倒數計時核心邏輯
+  useEffect(() => {
+    let timer = null;
+    if (isRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (isRunning && timeLeft === 0) {
+      setIsWorking(!isWorking);
+      setTimeLeft(!isWorking ? workLength : breakLength);
+      alert(isWorking ? "🔊 專注時間結束！休息一下吧！" : "💪 休息結束！準備開始專注！");
+    }
+    return () => clearInterval(timer);
+  }, [isRunning, timeLeft, isWorking, workLength, breakLength]);
+
+  // 格式化時間（秒數轉 mm:ss）
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    setIsWorking(true);
+    setTimeLeft(workLength);
+  };
+  // --- ⏱️ 計時器核心狀態與邏輯區結束 ---
 
   const tabs = [
     { id: "timer", label: "計時器", icon: "⏱️" },
@@ -15,25 +58,186 @@ export default function App() {
       case "timer":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">
-              ⏱️ 計時器
+            <h2 className="text-3xl font-bold mb-2 text-slate-800">
+              ⏱️ 計時器 — <span className="text-xl font-semibold text-blue-500">{isWorking ? "專注中" : "休息中"}</span>
             </h2>
             <div className="text-center">
-              <div className="text-6xl font-bold text-blue-600 mb-8">25:00</div>
-              <div className="flex gap-4 justify-center">
-                <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                  開始計時
+              {/* 動態顯示倒數時間 */}
+              <div className="text-6xl font-bold text-blue-600 mb-8 font-mono tracking-wider">
+                {formatTime(timeLeft)}
+              </div>
+              <div className="flex gap-4 justify-center mb-8">
+                <button 
+                  onClick={() => setIsRunning(!isRunning)}
+                  className={`${isRunning ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700"} text-white px-8 py-3 rounded-lg font-semibold transition`}
+                >
+                  {isRunning ? "暫停計時" : "開始計時"}
                 </button>
-                <button className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition">
+                <button 
+                  onClick={handleReset}
+                  className="bg-slate-300 text-slate-800 px-8 py-3 rounded-lg font-semibold hover:bg-slate-400 transition"
+                >
                   重置
                 </button>
               </div>
+
+              <hr className="border-slate-100 my-6" />
+
+              {/* 🛠️ 您需要的時間增減調整控制項 */}
+              <div className="max-w-xs mx-auto space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">📝 專注時間 :</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setWorkLength(prev => Math.max(60, prev - 60))}
+                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
+                    >
+                      -
+                    </button>
+                    <span className="w-16 text-center font-semibold text-slate-800">{Math.floor(workLength / 60)} 分</span>
+                    <button 
+                      onClick={() => setWorkLength(prev => prev + 60)}
+                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">☕ 休息時間 :</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setBreakLength(prev => Math.max(60, prev - 60))}
+                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
+                    >
+                      -
+                    </button>
+                    <span className="w-16 text-center font-semibold text-slate-800">{Math.floor(breakLength / 60)} 分</span>
+                    <button 
+                      onClick={() => setBreakLength(prev => prev + 60)}
+                      className="w-8 h-8 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         );
       case "tasks":
         return (
           <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">
+              📋 任務清單
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+                <input type="checkbox" className="w-5 h-5" />
+                <span className="text-lg">完成閱讀第一章</span>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+                <input type="checkbox" className="w-5 h-5" />
+                <span className="text-lg">複習數學公式</span>
+              </div>
+            </div>
+            <input
+              type="text"
+              placeholder="新增任務..."
+              className="w-full mt-4 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        );
+      case "stats":
+        return (
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">
+              📊 統計數據
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">12</div>
+                <div className="text-sm text-slate-600">今日番茄鐘</div>
+              </div>
+              <div className="bg-green-50 p-6 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">5h 40m</div>
+                <div className="text-sm text-slate-600">學習時長</div>
+              </div>
+              <div className="bg-purple-50 p-6 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">8</div>
+                <div className="text-sm text-slate-600">完成任務</div>
+              </div>
+              <div className="bg-orange-50 p-6 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">95%</div>
+                <div className="text-sm text-slate-600">完成率</div>
+              </div>
+            </div>
+          </div>
+        );
+      case "ai":
+        return (
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">
+              🤖 AI 學習建議
+            </h2>
+            <div className="space-y-4">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p className="font-semibold text-blue-900">學習建議</p>
+                <p className="text-sm text-blue-800 mt-1">
+                  根據你的學習數據，建議每個番茄鐘後休息 5 分鐘。
+                </p>
+              </div>
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <p className="font-semibold text-green-900">進度追蹤</p>
+                <p className="text-sm text-green-800 mt-1">
+                  你的學習連續性很好，請再加油！
+                </p>
+              </div>
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                <p className="font-semibold text-yellow-900">優化建議</p>
+                <p className="text-sm text-yellow-800 mt-1">
+                  嘗試在下午 2-4 點進行複習，效果會更佳。
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-blue-600">
+                📚 AI Reading Timer
+              </h1>
+              <p className="text-sm text-slate-600 mt-1">
+                搭載 AI 的讀書計時助手，幫你提升學習效率
+              </p>
+            </div>
+            <div className="text-right text-sm text-slate-600">
+              <p>讓我們一起專注學習吧！💪</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab navigation */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
             <h2 className="text-3xl font-bold mb-6 text-slate-800">
               📋 任務清單
             </h2>
